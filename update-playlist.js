@@ -31,14 +31,41 @@ async function getLiveDomain(testUrls) {
     return testUrls[0];
 }
 
-// Categories jo MAIN_SITE variable ka use karti hain
 const categories = [
-    { path: 'genre/top-rated/', group: '✨Cinema Movies✨' },
-    { path: 'genre/bollywood/', group: '✨ Bollywood movies✨' },
-    { path: 'genre/dual-audio/', group: '✨ Dual Audio✨' },
-    { path: 'genre/hollywood/', group: '✨ Hollywood movies✨' },
-    { path: 'genre/south-special/', group: '✨ South Sepical✨' }
+    // --- Genres ---
+    { path: 'genre/top-rated/', group: '✨ Cinema Movies ✨' },
+    { path: 'genre/bollywood/', group: '✨ Bollywood Movies ✨' },
+    { path: 'genre/dual-audio/', group: '✨ Dual Audio ✨' },
+    { path: 'genre/hollywood/', group: '✨ Hollywood Movies ✨' },
+    { path: 'genre/south-special/', group: '✨ South Special ✨' },
+    { path: 'genre/animation/', group: '✨ Animation Movies ✨' },
+    { path: 'genre/action/', group: '✨ Action Movies ✨' },
+    { path: 'genre/adventure/', group: '✨ Adventure Movies ✨' },
+    { path: 'genre/biography/', group: '✨ Biography Movies ✨' },
+    { path: 'genre/comedy/', group: '✨ Comedy Movies ✨' },
+    { path: 'genre/crime/', group: '✨ Crime Movies ✨' },
+    { path: 'genre/drama/', group: '✨ Drama Movies ✨' },
+    { path: 'genre/mystery/', group: '✨ Mystery Movies ✨' },
+    { path: 'genre/family/', group: '✨ Family Movies ✨' },
+    { path: 'genre/fantasy/', group: '✨ Fantasy Movies ✨' },
+    { path: 'genre/horror/', group: '✨ Horror Movies ✨' },
+    { path: 'genre/history/', group: '✨ History Movies ✨' },
+    { path: 'genre/romantic/', group: '✨ Romantic Movies ✨' },
+    { path: 'genre/science-fiction/', group: '✨ Science Fiction Movies ✨' },
+    { path: 'genre/thriller/', group: '✨ Thriller Movies ✨' },
+    { path: 'genre/war/', group: '✨ War Movies ✨' },
+
+    // --- Series / OTT Platforms ---
+    { path: 'director/netflix/', group: '✨ Netflix Series ✨' },
+    { path: 'director/hotstar/', group: '✨ Hotstar Series ✨' },
+    { path: 'director/amazon-prime/', group: '✨ Amazon Prime Series ✨' },
+    { path: 'director/zee5/', group: '✨ Zee5 Series ✨' },
+    { path: 'director/voot-originals/', group: '✨ Voot Originals Series ✨' },
+    { path: 'director/sonyliv-original/', group: '✨ SonyLiv Original Series ✨' },
+    { path: 'director/viu-originals/', group: '✨ Viu Originals Series ✨' },
+    { path: 'director/mx-player/', group: '✨ MX Player Series ✨' }
 ];
+
 
 async function generatePlaylist() {
     let playlist = "#EXTM3U\n";
@@ -51,7 +78,7 @@ async function generatePlaylist() {
         const catBaseUrl = new URL(cat.path, MAIN_SITE).href;
         console.log(`\n--- Processing Category: ${cat.group} ---`);
         
-        for (let p = 1; p <= 10; p++) {
+        for (let p = 1; p <= 5; p++) {
             let targetPageUrl = p === 1 
                 ? `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}`
                 : `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}page/${p}/`;
