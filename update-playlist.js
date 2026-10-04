@@ -54,6 +54,8 @@ const categories = [
     { path: 'genre/science-fiction/', group: '✨ Science Fiction Movies ✨' },
     { path: 'genre/thriller/', group: '✨ Thriller Movies ✨' },
     { path: 'genre/war/', group: '✨ War Movies ✨' },
+    { path: 'genre/marathi/', group: '✨ Marathi Movies ✨' },
+    
 
     // --- Series / OTT Platforms ---
     { path: 'director/netflix/', group: '💥 Netflix Series 💥' },
