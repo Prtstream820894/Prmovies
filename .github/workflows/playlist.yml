@@ -2,7 +2,7 @@ name: Update IPTV Playlist
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # Yeh din mein 2 baar (har 12 ghante mein) automatically chalega
+    - cron: '0 0 * * *' # Ab din mein 1 baar (har 24 ghante mein) automatically chalega
   workflow_dispatch: # Isse aap manually bhi GitHub button se run kar sakte ho
 
 jobs:
