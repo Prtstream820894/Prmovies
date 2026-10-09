@@ -80,7 +80,7 @@ async function generatePlaylist() {
         const catBaseUrl = new URL(cat.path, MAIN_SITE).href;
         console.log(`\n--- Processing Category: ${cat.group} ---`);
         
-        for (let p = 1; p <= 50; p++) {
+        for (let p = 1; p <= 10; p++) {
             let targetPageUrl = p === 1 
                 ? `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}`
                 : `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}page/${p}/`;
