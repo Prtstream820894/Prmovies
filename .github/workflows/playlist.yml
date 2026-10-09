@@ -29,3 +29,4 @@ jobs:
       with:
         commit_message: "Auto-update IPTV playlist.m3u"
         file_pattern: playlist.m3u
+        push_options: '--force'
