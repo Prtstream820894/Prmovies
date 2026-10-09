@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 
 // --- 🌐 CONFIGURATION: Kal ko domain change ho toh bas yahan badlo, sab jagh update ho jayega! ---
-const MAIN_SITE = "https://prmovies.futbol/";
+const MAIN_SITE = "https://prmovies.fans/";
 
 const USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
