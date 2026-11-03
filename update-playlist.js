@@ -2,8 +2,8 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 
 // --- 🌐 CONFIGURATION ---
-// Firebase Realtime Database URL (.json extension ke sath)
-const FIREBASE_DB_URL = "https://ipl2020-46d2f-default-rtdb.firebaseio.com/Prmovies/Domain.json";
+// Firebase Realtime Database URL (Sahi path ke sath)
+const FIREBASE_DB_URL = "https://ipl2020-46d2f-default-rtdb.firebaseio.com/Prmovies.json";
 
 // Sirf ek hi link/path yahan dalein jise aapko scrape karna hai
 const TARGET_PATH = "genre/bollywood/"; 
@@ -42,7 +42,7 @@ async function fetchWithRetry(url, options = {}, retries = 2) {
     return null;
 }
 
-// Firebase se strictly domain lene ke liye function (No Fallback)
+// Firebase se sahi JSON structure parse karke domain nikalne ke liye function
 async function getMainDomainFromFirebase() {
     console.log("Fetching main domain strictly from Firebase...");
     const res = await fetchWithRetry(FIREBASE_DB_URL, {}, 2);
@@ -50,12 +50,12 @@ async function getMainDomainFromFirebase() {
         throw new Error("❌ Error: Firebase se connect nahi ho paya ya domain fetch nahi hua!");
     }
     
-    let domain = await res.json();
-    if (!domain) {
-        throw new Error("❌ Error: Firebase database par domain path par koi data nahi mila!");
+    const data = await res.json();
+    if (!data || !data.Domain) {
+        throw new Error("❌ Error: Firebase response mein 'Domain' key nahi mili!");
     }
 
-    domain = domain.toString().replace(/"/g, '').trim();
+    let domain = data.Domain.toString().trim();
     console.log(`-> Domain fetched successfully from Firebase: ${domain}`);
     return domain.endsWith('/') ? domain : domain + '/';
 }
@@ -75,7 +75,7 @@ async function generatePlaylist() {
         let playlist = "#EXTM3U\n";
         let totalMoviesAdded = 0;
         
-        // Sirf Firebase se domain aayega, agar fail hua toh yahin ruk jayega
+        // Firebase se dynamic main site URL lena
         const MAIN_SITE = await getMainDomainFromFirebase();
 
         console.log("Fetching live stream base domain...");
