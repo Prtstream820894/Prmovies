@@ -3,7 +3,7 @@ const fs = require('fs');
 
 // --- 🌐 CONFIGURATION ---
 // Firebase Realtime Database URL (Sahi path ke sath)
-const FIREBASE_DB_URL = "https://ipl2020-46d2f-default-rtdb.firebaseio.com/Prmovies.json";
+const FIREBASE_DB_URL = "https://ipl2020-46d2f.firebaseio.com/Prmovies.json";
 
 // Sirf ek hi link/path yahan dalein jise aapko scrape karna hai
 const TARGET_PATH = "genre/bollywood/"; 
