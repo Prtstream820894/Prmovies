@@ -87,7 +87,7 @@ async function generatePlaylist() {
         
         let emptyPageStreak = 0;
 
-        for (let p = 1; p <= 3; p++) { 
+        for (let p = 1; p <= 10; p++) { 
             let targetPageUrl = p === 1 
                 ? `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}`
                 : `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}page/${p}/`;
