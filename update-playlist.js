@@ -2,10 +2,10 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 
 // --- 🌐 CONFIGURATION ---
-// Firebase Realtime Database URL jahan se main domain fetch hoga (Screenshot ke mutabiq)
+// Firebase Realtime Database URL (.json extension ke sath)
 const FIREBASE_DB_URL = "https://ipl2020-46d2f-default-rtdb.firebaseio.com/Prmovies/Domain.json";
 
-// Sirf ek hi link/path yahan dalein jise aapko scrape karna hai (jaise: 'genre/bollywood/')
+// Sirf ek hi link/path yahan dalein jise aapko scrape karna hai
 const TARGET_PATH = "genre/bollywood/"; 
 
 // Yahan aap apna group name rakh sakte hain jo M3U playlist mein show hoga
@@ -42,24 +42,22 @@ async function fetchWithRetry(url, options = {}, retries = 2) {
     return null;
 }
 
-// Firebase se Main Domain fetch karne ke liye function
+// Firebase se strictly domain lene ke liye function (No Fallback)
 async function getMainDomainFromFirebase() {
-    console.log("Fetching main domain from Firebase...");
-    try {
-        const res = await fetchWithRetry(FIREBASE_DB_URL, {}, 2);
-        if (res) {
-            let domain = await res.json();
-            // Agar domain quotes ke sath aaye toh unhe remove kar de
-            if (domain) {
-                domain = domain.toString().replace(/"/g, '').trim();
-                console.log(`-> Domain fetched from Firebase: ${domain}`);
-                return domain.endsWith('/') ? domain : domain + '/';
-            }
-        }
-    } catch (e) {
-        console.log("-> Failed to fetch from Firebase, using fallback domain.");
+    console.log("Fetching main domain strictly from Firebase...");
+    const res = await fetchWithRetry(FIREBASE_DB_URL, {}, 2);
+    if (!res) {
+        throw new Error("❌ Error: Firebase se connect nahi ho paya ya domain fetch nahi hua!");
     }
-    return "https://prmovies.ventures/"; // Fallback agar firebase load na ho
+    
+    let domain = await res.json();
+    if (!domain) {
+        throw new Error("❌ Error: Firebase database par domain path par koi data nahi mila!");
+    }
+
+    domain = domain.toString().replace(/"/g, '').trim();
+    console.log(`-> Domain fetched successfully from Firebase: ${domain}`);
+    return domain.endsWith('/') ? domain : domain + '/';
 }
 
 async function getLiveDomain(testUrls) {
@@ -73,83 +71,86 @@ async function getLiveDomain(testUrls) {
 }
 
 async function generatePlaylist() {
-    let playlist = "#EXTM3U\n";
-    let totalMoviesAdded = 0;
-    
-    // Firebase se dynamic main site URL lena
-    const MAIN_SITE = await getMainDomainFromFirebase();
+    try {
+        let playlist = "#EXTM3U\n";
+        let totalMoviesAdded = 0;
+        
+        // Sirf Firebase se domain aayega, agar fail hua toh yahin ruk jayega
+        const MAIN_SITE = await getMainDomainFromFirebase();
 
-    console.log("Fetching live stream base domain...");
-    const streamBaseLive = await getLiveDomain(["https://speedostream1.com/", "https://speedostream.com/"]);
-    const cleanStreamBase = streamBaseLive.replace(/\/$/, "");
+        console.log("Fetching live stream base domain...");
+        const streamBaseLive = await getLiveDomain(["https://speedostream1.com/", "https://speedostream.com/"]);
+        const cleanStreamBase = streamBaseLive.replace(/\/$/, "");
 
-    const catBaseUrl = new URL(TARGET_PATH, MAIN_SITE).href;
-    console.log(`\n--- Processing Target Link: ${catBaseUrl} [Group: ${GROUP_NAME}] ---`);
-    
-    let emptyPageStreak = 0;
+        const catBaseUrl = new URL(TARGET_PATH, MAIN_SITE).href;
+        console.log(`\n--- Processing Target Link: ${catBaseUrl} [Group: ${GROUP_NAME}] ---`);
+        
+        let emptyPageStreak = 0;
 
-    // Yahan aap pages ki limit set kar sakte hain (jaise p <= 3 matlab 3 pages tak scan karega)
-    for (let p = 1; p <= 3; p++) { 
-        let targetPageUrl = p === 1 
-            ? `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}`
-            : `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}page/${p}/`;
+        for (let p = 1; p <= 3; p++) { 
+            let targetPageUrl = p === 1 
+                ? `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}`
+                : `https://bold-darkness-d959.poonamchouhan076.workers.dev/?site=${catBaseUrl}page/${p}/`;
 
-        const htmlRes = await fetchWithRetry(targetPageUrl);
-        if (!htmlRes) {
-            console.log(`  -> Page ${p}: Failed to load, trying next page...`);
-            continue;
-        }
+            const htmlRes = await fetchWithRetry(targetPageUrl);
+            if (!htmlRes) {
+                console.log(`  -> Page ${p}: Failed to load, trying next page...`);
+                continue;
+            }
 
-        const htmlContent = await htmlRes.text();
-        const mlItems = htmlContent.split('class="ml-item"');
+            const htmlContent = await htmlRes.text();
+            const mlItems = htmlContent.split('class="ml-item"');
 
-        if (mlItems.length <= 1) {
-            emptyPageStreak++;
-            if (emptyPageStreak >= 2) break;
-            continue;
-        }
+            if (mlItems.length <= 1) {
+                emptyPageStreak++;
+                if (emptyPageStreak >= 2) break;
+                continue;
+            }
 
-        emptyPageStreak = 0;
-        let pageMovieCount = 0;
+            emptyPageStreak = 0;
+            let pageMovieCount = 0;
 
-        for (let index = 1; index < mlItems.length; index++) {
-            const item = mlItems[index];
+            for (let index = 1; index < mlItems.length; index++) {
+                const item = mlItems[index];
 
-            const hrefMatch = item.match(/<a\s+href="([^"]+)"/) || item.match(/href="([^"]+\/(?:movie|series|item)\/[^"]+)"/);
-            const imgMatch = item.match(/data-original="([^"]+)"/) || item.match(/src="([^"]+)"/);
-            const titleMatch = item.match(/<h2>([\s\S]*?)<\/h2>/) || item.match(/title="([^"]+)"/);
+                const hrefMatch = item.match(/<a\s+href="([^"]+)"/) || item.match(/href="([^"]+\/(?:movie|series|item)\/[^"]+)"/);
+                const imgMatch = item.match(/data-original="([^"]+)"/) || item.match(/src="([^"]+)"/);
+                const titleMatch = item.match(/<h2>([\s\S]*?)<\/h2>/) || item.match(/title="([^"]+)"/);
 
-            if (!hrefMatch) continue;
+                if (!hrefMatch) continue;
 
-            const movieHref = hrefMatch[1];
-            let title = titleMatch ? titleMatch[1].replace(/<[^>]*>?/gm, '').trim() : "Unknown Title";
-            let logo = imgMatch ? imgMatch[1] : '';
+                const movieHref = hrefMatch[1];
+                let title = titleMatch ? titleMatch[1].replace(/<[^>]*>?/gm, '').trim() : "Unknown Title";
+                let logo = imgMatch ? imgMatch[1] : '';
 
-            try {
-                const detailRes = await fetchWithRetry(movieHref, {}, 1);
-                if (!detailRes) continue;
+                try {
+                    const detailRes = await fetchWithRetry(movieHref, {}, 1);
+                    if (!detailRes) continue;
 
-                const detailHtml = await detailRes.text();
-                const iframeMatch = detailHtml.match(/<iframe[^>]+src="([^"]+)"/i);
-                
-                if (iframeMatch && iframeMatch[1]) {
-                    const idMatch = iframeMatch[1].match(/embed-([a-zA-Z0-9]+)\.html/i);
-                    if (idMatch && idMatch[1]) {
-                        const embedId = idMatch[1];
-                        const playLink = `${cleanStreamBase}/embed-${embedId}.html`;
-                        
-                        playlist += `#EXTINF:-1 tvg-logo="${logo}" group-title="${GROUP_NAME}",${title}\n${playLink}\n`;
-                        totalMoviesAdded++;
-                        pageMovieCount++;
+                    const detailHtml = await detailRes.text();
+                    const iframeMatch = detailHtml.match(/<iframe[^>]+src="([^"]+)"/i);
+                    
+                    if (iframeMatch && iframeMatch[1]) {
+                        const idMatch = iframeMatch[1].match(/embed-([a-zA-Z0-9]+)\.html/i);
+                        if (idMatch && idMatch[1]) {
+                            const embedId = idMatch[1];
+                            const playLink = `${cleanStreamBase}/embed-${embedId}.html`;
+                            
+                            playlist += `#EXTINF:-1 tvg-logo="${logo}" group-title="${GROUP_NAME}",${title}\n${playLink}\n`;
+                            totalMoviesAdded++;
+                            pageMovieCount++;
+                        }
                     }
-                }
-            } catch (err) {}
+                } catch (err) {}
+            }
+            console.log(`  -> Page ${p}: Added ${pageMovieCount} movies.`);
         }
-        console.log(`  -> Page ${p}: Added ${pageMovieCount} movies.`);
-    }
 
-    fs.writeFileSync('playlist.m3u', playlist, 'utf-8');
-    console.log(`\n✅ Playlist successfully generated! Total items added: ${totalMoviesAdded}. Saved as playlist.m3u`);
+        fs.writeFileSync('playlist.m3u', playlist, 'utf-8');
+        console.log(`\n✅ Playlist successfully generated! Total items added: ${totalMoviesAdded}. Saved as playlist.m3u`);
+    } catch (error) {
+        console.error(error.message);
+    }
 }
 
 generatePlaylist();
